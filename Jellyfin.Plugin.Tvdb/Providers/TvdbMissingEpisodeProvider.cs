@@ -508,5 +508,15 @@ namespace Jellyfin.Plugin.Tvdb.Providers
             _libraryManager.ItemRemoved -= OnLibraryManagerItemRemoved;
             return Task.CompletedTask;
         }
+
+        /// <summary>
+        /// Gets the countries.
+        /// </summary>
+        /// <param name="cancellationToken">cancellation token.</param>
+        /// <returns>A <see cref="Task{TResult}"/> representing the result of the asynchronous operation.</returns>
+        public Task<IEnumerable<CountryInfo>> GetCountries(CancellationToken cancellationToken)
+        {
+            return Task.FromResult(Enumerable.Empty<CountryInfo>());
+        }
     }
 }

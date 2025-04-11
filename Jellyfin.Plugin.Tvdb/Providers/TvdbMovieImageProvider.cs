@@ -11,6 +11,7 @@ using MediaBrowser.Controller.Entities;
 using MediaBrowser.Controller.Entities.Movies;
 using MediaBrowser.Controller.Providers;
 using MediaBrowser.Model.Entities;
+using MediaBrowser.Model.Globalization;
 using MediaBrowser.Model.Providers;
 using Microsoft.Extensions.Logging;
 using Tvdb.Sdk;
@@ -64,6 +65,10 @@ namespace Jellyfin.Plugin.Tvdb.Providers
         /// <inheritdoc />
         public async Task<IEnumerable<RemoteImageInfo>> GetImages(BaseItem item, CancellationToken cancellationToken)
         {
+            bool excludeTextLessImages = TvdbPlugin.Instance?.Configuration.ExcludeTextLessImages ?? false;
+
+            _logger.LogInformation("Getting images for {ItemName} ExcludedTextLess : {ExcludedTextless}", item.Name, excludeTextLessImages);
+
             if (!item.IsSupported())
             {
                 return Enumerable.Empty<RemoteImageInfo>();
@@ -86,12 +91,19 @@ namespace Jellyfin.Plugin.Tvdb.Providers
                 .ConfigureAwait(false);
 
             var remoteImages = new List<RemoteImageInfo>();
+
+            var needToExcludeTextLessImages = excludeTextLessImages && movieArtworks.Any(a => a.Language is null);
+
             foreach (var artwork in movieArtworks)
             {
+                if (needToExcludeTextLessImages && artwork.Language is null)
+                {
+                    continue;
+                }
+
                 var artworkType = artwork.Type is null ? null : movieArtworkTypeLookup.GetValueOrDefault(artwork.Type!.Value);
                 var imageType = artworkType.GetImageType();
                 var artworkLanguage = artwork.Language is null ? null : languageLookup.GetValueOrDefault(artwork.Language);
-
                 // only add if valid RemoteImageInfo
                 remoteImages.AddIfNotNull(artwork.CreateImageInfo(Name, imageType, artworkLanguage));
             }
@@ -101,15 +113,33 @@ namespace Jellyfin.Plugin.Tvdb.Providers
 
         private async Task<IReadOnlyList<ArtworkBaseRecord>> GetMovieArtworks(int movieTvdbId, CancellationToken cancellationToken)
         {
-            var movieInfo = await _tvdbClientManager.GetMovieExtendedByIdAsync(movieTvdbId, cancellationToken)
-                .ConfigureAwait(false);
-            return movieInfo?.Artworks ?? Array.Empty<ArtworkBaseRecord>();
+            try
+            {
+                var movieInfo = await _tvdbClientManager.GetMovieExtendedByIdAsync(movieTvdbId, cancellationToken)
+                    .ConfigureAwait(false);
+                return movieInfo?.Artworks ?? Array.Empty<ArtworkBaseRecord>();
+            }
+            catch (Exception ex)
+            {
+                _logger.LogError(ex, "Error getting movie artworks for {MovieTvdbId}", movieTvdbId);
+                return Array.Empty<ArtworkBaseRecord>();
+            }
         }
 
         /// <inheritdoc />
         public Task<HttpResponseMessage> GetImageResponse(string url, CancellationToken cancellationToken)
         {
             return _httpClientFactory.CreateClient(NamedClient.Default).GetAsync(new Uri(url), cancellationToken);
+        }
+
+        /// <summary>
+        /// Gets the countries.
+        /// </summary>
+        /// <param name="cancellationToken">cancellation token.</param>
+        /// <returns>A <see cref="Task{TResult}"/> representing the result of the asynchronous operation.</returns>
+        public Task<IEnumerable<CountryInfo>> GetCountries(CancellationToken cancellationToken)
+        {
+            return Task.FromResult(Enumerable.Empty<CountryInfo>());
         }
     }
 }

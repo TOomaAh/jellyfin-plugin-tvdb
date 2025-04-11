@@ -13,6 +13,7 @@ using MediaBrowser.Controller.Entities.TV;
 using MediaBrowser.Controller.Library;
 using MediaBrowser.Controller.Providers;
 using MediaBrowser.Model.Entities;
+using MediaBrowser.Model.Globalization;
 using MediaBrowser.Model.Providers;
 using Microsoft.Extensions.Logging;
 using Tvdb.Sdk;
@@ -94,6 +95,16 @@ namespace Jellyfin.Plugin.Tvdb.Providers
         public Task<HttpResponseMessage> GetImageResponse(string url, CancellationToken cancellationToken)
         {
             return _httpClientFactory.CreateClient(NamedClient.Default).GetAsync(new Uri(url), cancellationToken);
+        }
+
+        /// <summary>
+        /// Gets the countries.
+        /// </summary>
+        /// <param name="cancellationToken">cancellation token.</param>
+        /// <returns>A <see cref="Task{TResult}"/> representing the result of the asynchronous operation.</returns>
+        public Task<IEnumerable<CountryInfo>> GetCountries(CancellationToken cancellationToken)
+        {
+            return Task.FromResult(Enumerable.Empty<CountryInfo>());
         }
     }
 }
