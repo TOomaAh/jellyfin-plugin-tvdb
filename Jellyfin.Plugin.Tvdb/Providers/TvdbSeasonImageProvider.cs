@@ -13,6 +13,7 @@ using MediaBrowser.Controller.Entities.TV;
 using MediaBrowser.Controller.Providers;
 using MediaBrowser.Model.Entities;
 using MediaBrowser.Model.Extensions;
+using MediaBrowser.Model.Globalization;
 using MediaBrowser.Model.Providers;
 
 using Microsoft.Extensions.Logging;
@@ -69,6 +70,9 @@ public class TvdbSeasonImageProvider : IRemoteImageProvider
         var season = (Season)item;
         var series = season.Series;
 
+        bool excludeTextLessImages = TvdbPlugin.Instance?.Configuration.ExcludeTextLessImages ?? false;
+        _logger.LogInformation("Getting images for {ItemName} ExcludedTextLess : {ExcludedTextless}", item.Name ?? "Inconnu", excludeTextLessImages);
+
         if (!series.IsSupported() || season.IndexNumber is null)
         {
             return Enumerable.Empty<RemoteImageInfo>();
@@ -98,9 +102,16 @@ public class TvdbSeasonImageProvider : IRemoteImageProvider
         var seasonArtworks = await GetSeasonArtworks(seriesTvdbId, seasonNumber, displayOrder, cancellationToken)
             .ConfigureAwait(false);
 
+        var needToExcludeTextLessImages = excludeTextLessImages && seasonArtworks.Any(a => a.Language is null);
+
         var remoteImages = new List<RemoteImageInfo>();
         foreach (var artwork in seasonArtworks)
         {
+            if (needToExcludeTextLessImages && artwork.Language is null)
+            {
+                continue;
+            }
+
             var artworkType = artwork.Type is null ? null : seasonArtworkTypeLookup.GetValueOrDefault(artwork.Type!.Value);
             var imageType = artworkType.GetImageType();
             var artworkLanguage = artwork.Language is null ? null : languageLookup.GetValueOrDefault(artwork.Language);
@@ -151,5 +162,15 @@ public class TvdbSeasonImageProvider : IRemoteImageProvider
     public Task<HttpResponseMessage> GetImageResponse(string url, CancellationToken cancellationToken)
     {
         return _httpClientFactory.CreateClient(NamedClient.Default).GetAsync(new Uri(url), cancellationToken);
+    }
+
+    /// <summary>
+    /// Gets the countries.
+    /// </summary>
+    /// <param name="cancellationToken">cancellation token.</param>
+    /// <returns>A <see cref="Task{TResult}"/> representing the result of the asynchronous operation.</returns>
+    public Task<IEnumerable<CountryInfo>> GetCountries(CancellationToken cancellationToken)
+    {
+        return Task.FromResult(Enumerable.Empty<CountryInfo>());
     }
 }

@@ -47,6 +47,10 @@
                         <span>Import season name from provider</span>
                     </label>
                     <label class="checkboxContainer">
+                        <input is="emby-checkbox" type="checkbox" id="excludeTextLessImages" />
+                        <span>Exclude or include textless images</span>
+                    </label>
+                    <label class="checkboxContainer">
                         <input is="emby-checkbox" type="checkbox" id="fallbackToOriginalLanguage" />
                         <span>Fallback to Original Language (Last resort if other fallback languages fails)</span>
                     </label>
@@ -118,8 +122,9 @@
                     document.getElementById('fallbackLanguages').value = config.FallbackLanguages;
                     document.getElementById('importSeasonName').checked = config.ImportSeasonName
                     document.getElementById('fallbackToOriginalLanguage').checked = config.FallbackToOriginalLanguage;
+                    document.getElementById('excludeTextLessImages').checked = config.ExcludeTextLessImages;
                     document.getElementById('includeOriginalCountryInTags').checked = config.IncludeOriginalCountryInTags;
-                  
+
                     // Missing Episode Provider Settings
                     document.getElementById('includeMissingSpecials').checked = config.IncludeMissingSpecials;
                     document.getElementById('removeAllMissingEpisodesOnRefresh').checked = config.RemoveAllMissingEpisodesOnRefresh;
@@ -145,8 +150,9 @@
                     config.FallbackLanguages = document.getElementById('fallbackLanguages').value;
                     config.ImportSeasonName = document.getElementById('importSeasonName').checked;
                     config.FallbackToOriginalLanguage = document.getElementById('fallbackToOriginalLanguage').checked;
+                    config.ExcludeTextLessImages = document.getElementById('excludeTextLessImages').checked;
                     config.IncludeOriginalCountryInTags = document.getElementById('includeOriginalCountryInTags').checked;
-                  
+
                     // Missing Episode Provider Settings
                     config.IncludeMissingSpecials = document.getElementById('includeMissingSpecials').checked;
                     config.RemoveAllMissingEpisodesOnRefresh = document.getElementById('removeAllMissingEpisodesOnRefresh').checked;

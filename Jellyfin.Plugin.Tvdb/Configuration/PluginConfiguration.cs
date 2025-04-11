@@ -42,6 +42,11 @@ namespace Jellyfin.Plugin.Tvdb.Configuration
         }
 
         /// <summary>
+        /// Gets or sets a value indicating whether if the plugin excludes textless images.
+        /// </summary>
+        public bool ExcludeTextLessImages { get; set; } = true;
+
+        /// <summary>
         /// Gets or sets the fallback languages.
         /// </summary>
         public string FallbackLanguages { get; set; } = string.Empty;
