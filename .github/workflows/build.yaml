@@ -14,5 +14,21 @@ on:
   workflow_dispatch:
 
 jobs:
+  prepare:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout Repository
+        uses: actions/checkout@v4
+
+      - name: Replace API Keys
+        run: |
+          find . -type f -name "*.cs" -exec sed -i 's/__TVDB_API_KEY__/${{ secrets.TVDB_API_KEY }}/g' {} \;
+
+      - name: Upload Repository
+        uses: actions/upload-artifact@v4
+        with:
+          name: prepared-repo
+          path: .
   call:
+    needs: prepare
     uses: jellyfin/jellyfin-meta-plugins/.github/workflows/build.yaml@master
